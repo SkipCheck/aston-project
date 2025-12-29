@@ -24,10 +24,6 @@ public class UserService {
 
         validateUserData(name, email, age);
 
-        if (userDao.existsByEmail(email)) {
-            throw new UserException("Пользователь с email " + email + " уже существует");
-        }
-
         User user = User.builder()
                 .name(name)
                 .email(email)
@@ -64,21 +60,12 @@ public class UserService {
 
         validateUserData(name, email, age);
 
-        Optional<User> existingUser = userDao.findById(id);
-        if (existingUser.isEmpty()) {
-            throw new UserException("Пользователь с ID " + id + " не найден");
-        }
-
-        User user = existingUser.get();
-
-        // проверяем, не используется ли email другим пользователем
-        if (!user.getEmail().equals(email) && userDao.existsByEmail(email)) {
-            throw new UserException("Email " + email + " уже используется другим пользователем");
-        }
-
-        user.setName(name);
-        user.setEmail(email);
-        user.setAge(age);
+        User user = User.builder()
+                .id(id)
+                .name(name)
+                .email(email)
+                .age(age)
+                .build();
 
         return userDao.update(user);
     }

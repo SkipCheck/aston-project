@@ -200,10 +200,9 @@ public class Main {
             String ageInput = scanner.nextLine();
             Integer age = ageInput.isEmpty() ? null : Integer.parseInt(ageInput);
 
-            User updatedUser = userService.updateUser(id, name, email, age);
+            userService.updateUser(id, name, email, age);
 
             log.info("Пользователь успешно обновлен!");
-            displayUser(updatedUser);
 
         } catch (NumberFormatException e) {
             log.info("Ошибка: ID и возраст должны быть числами");
@@ -272,11 +271,12 @@ public class Main {
     }
 
     private static void displayUserShort(User user) {
-        log.info("ID: {} | Имя: {} | Email: {} | Возраст: {}",
+        log.info("ID: {} | Имя: {} | Email: {} | Возраст: {} | Дата создания: {}",
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getAge() != null ? user.getAge() : "не указан");
+                user.getAge() != null ? user.getAge() : "не указан",
+                user.getCreatedAt());
     }
 
 }

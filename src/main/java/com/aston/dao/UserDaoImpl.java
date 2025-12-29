@@ -6,6 +6,7 @@ import com.aston.utils.HibernateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.query.Query;
 
 import javax.persistence.NoResultException;
@@ -17,27 +18,36 @@ public class UserDaoImpl implements UserDao{
     @Override
     public User save(User user) {
         Transaction transaction = null;
+        Session session = getSession();
 
-        try(Session session = getSession()){
+        try {
             transaction = session.beginTransaction();
             session.save(user);
             transaction.commit();
             log.info("Пользователь id-{} сохранен", user.getId());
 
             return user;
-        }catch (Exception e) {
+        } catch (Exception e ) {
             if (transaction != null) {
                 transaction.rollback();
             }
+
+            String messageException = e instanceof ConstraintViolationException ? "Пользователь с email " + user.getEmail() + " уже существует" : "Не удалось сохранить пользователя";
+
             log.error("Ошибка при сохранении пользователя: {}", e.getMessage(), e);
-            throw new UserException("Не удалось сохранить пользователя", e);
+            throw new UserException(messageException, e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
     @Override
     public User update(User user) {
         Transaction transaction = null;
-        try (Session session = getSession()) {
+
+        try (Session session = getSession()){
             transaction = session.beginTransaction();
             session.update(user);
             transaction.commit();
@@ -94,29 +104,37 @@ public class UserDaoImpl implements UserDao{
 
     @Override
     public Optional<User> findById(Long id) {
-        try (Session session = getSession()) {
+        Session session = getSession();
+        try {
             User user = session.get(User.class, id);
             return Optional.ofNullable(user);
         } catch (Exception e) {
             log.error("Ошибка при поиске пользователя по ID {}: {}", id, e.getMessage(), e);
             throw new UserException("Не удалось найти пользователя по ID", e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
     @Override
     public void delete(Long id) {
         Transaction transaction = null;
-        try (Session session = getSession()) {
+        Session session = null;
+        try {
+            session = getSession();
             transaction = session.beginTransaction();
 
             User user = session.get(User.class, id);
-            if (user != null) {
-                session.delete(user);
-                log.info("Пользователь удален с ID: {}", id);
-            } else {
+
+            if (user == null) {
                 log.warn("Пользователь с ID {} не найден", id);
                 throw new UserException("Пользователь не найден");
             }
+
+            session.delete(user);
+            log.info("Пользователь удален с ID: {}", id);
 
             transaction.commit();
 
@@ -126,6 +144,10 @@ public class UserDaoImpl implements UserDao{
             }
             log.error("Ошибка при удалении пользователя с ID {}: {}", id, e.getMessage(), e);
             throw new UserException("Не удалось удалить пользователя", e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
     }
 
