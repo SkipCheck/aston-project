@@ -19,7 +19,7 @@ public class KafkaEventService {
 
     public void sendUserCreatedEvent(Long userId, String email, String name) {
         UserEvent event = UserEvent.builder()
-                .eventType("USER_CREATED")
+                .eventType(UserEvent.EventType.USER_CREATED)
                 .userId(userId)
                 .email(email)
                 .name(name)
@@ -30,7 +30,7 @@ public class KafkaEventService {
 
     public void sendUserDeletedEvent(Long userId, String email, String name) {
         UserEvent event = UserEvent.builder()
-                .eventType("USER_DELETED")
+                .eventType(UserEvent.EventType.USER_DELETED)
                 .userId(userId)
                 .email(email)
                 .name(name)
