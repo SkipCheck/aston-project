@@ -1,7 +1,7 @@
 package com.aston.service;
 
 import com.aston.dto.UserRequest;
-import com.aston.dto.UserResponse;
+import com.aston.dto.UserResource;
 import com.aston.entity.User;
 import com.aston.exception.UserException;
 import com.aston.repository.UserRepository;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * Сервисный слой приложения
  *
  * Бизнес-логика работы с пользователями
- * Инкапуслирует работу с репозиторием и преобразованием DTO
+ * Инкапсулирует работу с репозиторием и преобразованием DTO
  */
 @Slf4j
 @Service
@@ -30,13 +30,13 @@ public class UserService {
     private final KafkaEventService kafkaEventService;
 
     /**
-     * Преобразует сущность user в DTO UserResponse
+     * Преобразует сущность user в DTO UserResource
      *
      * @param user сущность пользователя
      * @return DTO для ответа
      */
-    private UserResponse convertToResponse(User user) {
-        return UserResponse.builder()
+    private UserResource convertToResource(User user) {
+        return UserResource.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
@@ -44,6 +44,7 @@ public class UserService {
                 .createdAt(user.getCreatedAt())
                 .build();
     }
+
     /**
      * Создание нового пользователя
      *
@@ -52,7 +53,7 @@ public class UserService {
      * @throws UserException если пользователь с таким email уже существует
      */
     @Transactional
-    public UserResponse createUser(UserRequest userRequest) {
+    public UserResource createUser(UserRequest userRequest) {
         log.info("Создание нового пользователя: name={}, email={}, age={}",
                 userRequest.getName(), userRequest.getEmail(), userRequest.getAge());
 
@@ -72,7 +73,7 @@ public class UserService {
         kafkaEventService.sendUserCreatedEvent(user.getId(), user.getEmail(), user.getName());
 
         log.info("Пользователь создан: id={}, email={}", user.getId(), user.getEmail());
-        return convertToResponse(user);
+        return convertToResource(user);
     }
 
     /**
@@ -82,13 +83,13 @@ public class UserService {
      * @return пользователь в виде DTO
      * @throws UserException если пользователь не найден
      */
-    public UserResponse getUserById(Long id) {
+    public UserResource getUserById(Long id) {
         log.debug("Получение пользователя по ID: {}", id);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserException("Пользователь с ID " + id + " не найден"));
 
-        return convertToResponse(user);
+        return convertToResource(user);
     }
 
     /**
@@ -96,11 +97,11 @@ public class UserService {
      *
      * @return список всех пользователей
      */
-    public List<UserResponse> getAllUsers() {
+    public List<UserResource> getAllUsers() {
         log.debug("Получение всех пользователей");
 
         return userRepository.findAll().stream()
-                .map(this::convertToResponse)
+                .map(this::convertToResource)
                 .collect(Collectors.toList());
     }
 
@@ -110,11 +111,11 @@ public class UserService {
      * @param name имя или часть имени для поиска
      * @return список найденных пользователей
      */
-    public List<UserResponse> getUsersByName(String name) {
+    public List<UserResource> getUsersByName(String name) {
         log.debug("Поиск пользователей по имени: {}", name);
 
         return userRepository.findByNameContainingIgnoreCase(name).stream()
-                .map(this::convertToResponse)
+                .map(this::convertToResource)
                 .collect(Collectors.toList());
     }
 
@@ -125,13 +126,13 @@ public class UserService {
      * @return пользователь в виде DTO
      * @throws UserException если пользователь не найден
      */
-    public UserResponse getUserByEmail(String email) {
+    public UserResource getUserByEmail(String email) {
         log.debug("Поиск пользователя по email: {}", email);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserException("Пользователь с email " + email + " не найден"));
 
-        return convertToResponse(user);
+        return convertToResource(user);
     }
 
     /**
@@ -143,7 +144,7 @@ public class UserService {
      * @throws UserException если пользователь не найден или email уже занят другим пользователем
      */
     @Transactional
-    public UserResponse updateUser(Long id, UserRequest userRequest) {
+    public UserResource updateUser(Long id, UserRequest userRequest) {
         log.info("Обновление пользователя с ID {}: name={}, email={}, age={}",
                 id, userRequest.getName(), userRequest.getEmail(), userRequest.getAge());
 
@@ -161,7 +162,7 @@ public class UserService {
         user = userRepository.save(user);
 
         log.info("Пользователь обновлен: ID={}", id);
-        return convertToResponse(user);
+        return convertToResource(user);
     }
 
     /**
