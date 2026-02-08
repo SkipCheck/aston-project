@@ -1,59 +1,13 @@
 spring:
   application:
-    name: PetProject
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/projectdb
-    username: postgres
-    password: 45a23s00D-
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQL10Dialect
-        format_sql: true
-    generate-ddl: true
-
-  main:
-    banner-mode: off
-
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-
-# Swagger конфигурация
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: method
-    tags-sorter: alpha
-    doc-expansion: none
-    display-request-duration: true
-    defaultModelsExpandDepth: 1
-    defaultModelExpandDepth: 1
-
-kafka:
-  topics:
-    user-events: user-events-topic
+    name: user-service
+  config:
+    import: optional:configserver:http://localhost:8888
 
 server:
-  port: 5665
-  servlet:
-    context-path: /api
+  port: 8081
 
-logging:
-  level:
-    com.aston: INFO
-    org.springframework.web: INFO
-    org.hibernate.SQL: DEBUG
-    org.springdoc: INFO
-  pattern:
-    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+eureka:
+  client:
+    service-url:
+      defaultZone: http://admin:admin123@localhost:8761/eureka/

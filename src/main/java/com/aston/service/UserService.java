@@ -5,6 +5,8 @@ import com.aston.dto.UserResource;
 import com.aston.entity.User;
 import com.aston.exception.UserException;
 import com.aston.repository.UserRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,8 @@ public class UserService {
      * @return созданный пользователь в виде DTO
      * @throws UserException если пользователь с таким email уже существует
      */
+    @CircuitBreaker(name = "userRepository", fallbackMethod = "createUserFallback")
+    @Retry(name = "userRepository")
     @Transactional
     public UserResource createUser(UserRequest userRequest) {
         log.info("Создание нового пользователя: name={}, email={}, age={}",
@@ -76,6 +80,11 @@ public class UserService {
         return convertToResource(user);
     }
 
+    public UserResource createUserFallback(UserRequest userRequest, Exception e) {
+        log.error("Fallback for createUser: {}", e.getMessage());
+        throw new UserException("Сервис временно недоступен. Пожалуйста, попробуйте позже.");
+    }
+
     /**
      * Получение пользователя по id
      *
@@ -83,6 +92,7 @@ public class UserService {
      * @return пользователь в виде DTO
      * @throws UserException если пользователь не найден
      */
+    @CircuitBreaker(name = "userRepository", fallbackMethod = "getUserByIdFallback")
     public UserResource getUserById(Long id) {
         log.debug("Получение пользователя по ID: {}", id);
 
@@ -91,6 +101,12 @@ public class UserService {
 
         return convertToResource(user);
     }
+
+    public UserResource getUserByIdFallback(Long id, Exception e) {
+        log.error("Fallback for getUserById: {}", e.getMessage());
+        throw new UserException("Сервис временно недоступен. Пожалуйста, попробуйте позже.");
+    }
+
 
     /**
      * Получение всех пользователей
