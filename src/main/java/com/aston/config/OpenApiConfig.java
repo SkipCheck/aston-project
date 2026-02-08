@@ -45,11 +45,7 @@ import static org.springdoc.core.Constants.*;
         servers = {
                 @Server(
                         description = "Локальный сервер",
-                        url = "http://localhost:5665/api"
-                ),
-                @Server(
-                        description = "Продуктивный сервер",
-                        url = "https://api.aston.example.com"
+                        url = "http://localhost:8081/"
                 )
         }
 )
